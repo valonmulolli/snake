@@ -1,6 +1,7 @@
 #include "snake.h"
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_rect.h>
+#include <stdlib.h>
 
 #if 0 
 //FULLSCREEN
@@ -19,6 +20,73 @@
 
 #define GRID_SIZE 20
 #define GRID_DIM 1000
+
+enum {
+  SNAKE_UP,
+  SNAKE_DOWN,
+  SNAKE_LEFT,
+  SNAKE_RIGHT,
+};
+
+struct snake {
+  int x;
+  int y;
+  int dir;
+
+  struct snake *next;
+};
+
+typedef struct snake Snake;
+
+Snake *head;
+Snake *tail;
+
+void init_snake() {
+  Snake *new = malloc(sizeof(Snake));
+  new->x = rand() % GRID_SIZE / 2 + (GRID_SIZE / 4);
+  new->y = rand() % GRID_SIZE / 2 + (GRID_SIZE / 4);
+  new->dir = SNAKE_UP;
+  new->next = NULL;
+
+  head = new;
+  tail = new;
+
+  return;
+};
+
+void increase_snake() {
+
+  Snake *new = malloc(sizeof(Snake));
+  new->x = tail->x;
+  new->y = tail->y - 1;
+  new->dir = tail->dir;
+
+  new->next = NULL;
+  tail->next = new;
+  tail = new;
+
+  return;
+};
+
+void render_snake(SDL_Renderer *renderer, int x, int y) {
+
+  SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 255);
+  int seg_size = GRID_DIM / GRID_SIZE;
+  SDL_Rect seg;
+  seg.w = seg_size;
+  seg.h = seg_size;
+
+  Snake *track = head;
+  while (track != NULL) {
+    seg.x = x + track->x * seg_size;
+    seg.y = y + track->y * seg_size;
+    SDL_RenderFillRect(renderer, &seg);
+
+    track = track->next;
+  };
+
+  return;
+};
 
 void render_grid(SDL_Renderer *renderer, int x, int y) {
 
@@ -41,6 +109,9 @@ void render_grid(SDL_Renderer *renderer, int x, int y) {
 }
 
 int main() {
+
+  init_snake();
+  increase_snake();
 
   SDL_Window *window;
   SDL_Renderer *renderer;
@@ -94,6 +165,7 @@ int main() {
     // RENDER LOOP
 
     render_grid(renderer, grid_x, grid_y);
+    render_snake(renderer, grid_x, grid_y);
 
     // RENDER LOOP END
     SDL_SetRenderDrawColor(renderer, 0x11, 0x11, 0x11, 255);
